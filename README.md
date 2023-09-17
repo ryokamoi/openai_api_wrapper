@@ -5,14 +5,13 @@ This project includes an unofficial OpenAI API wrapper.
 ## Install
 
 ```sh
-git clone git@github.com:ryokamoi/openai_api_tools.git
-pip install ./openai_api_tools
+pip install git+https://github.com/ryokamoi/openai_api_wrapper
 ```
 
 ## Example
 
 ```python
-from openai_api_tools import openai_text_api, get_chat_parameters
+from openai_api_wrapper import openai_text_api, get_chat_parameters
 
 # Set up GPT-4 parameters
 gpt_parameters: dict = {
