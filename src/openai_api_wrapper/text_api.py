@@ -1,57 +1,37 @@
-from typing import Union, Optional, Literal
-import os
+from typing import Optional, Literal, TypedDict
 import time
 from pathlib import Path
-import json
-import hashlib
 
 import openai
 
-
-ParamsType = dict[str, Union[str, float]]
-
-
-def text2hash(string: str) -> str:
-    hash_object = hashlib.sha512(string.encode('utf-8'))
-    hex_dig = hash_object.hexdigest()
-
-    return hex_dig
+from openai_api_wrapper.cache_utils import read_cached_output, dump_output_to_cache
 
 
-def get_cache_path(cache_dir: Path, parameters: dict) -> Path:
-    return cache_dir / f"{text2hash(str(sorted(parameters.items())))}.json"
+# ParamsType = dict[str, Union[str, float]]
+class ParamsType(TypedDict):
+    prompt: str
+    temperature: float
+    messages: list[dict[str, str]]
 
 
-def _read_cached_output(cache_path: Path) -> dict:
-    if cache_path.exists():
-        print(f"read cache from {cache_path}")
-        with open(cache_path, "r") as f:
-            output_dict = json.load(f)
-        return output_dict
-    
-    return {}
-
-
-def load_cache(cache_dir: Path, parameters: dict) -> dict:
-    cache_path = get_cache_path(cache_dir, parameters)
-    
+def read_cache_openai(cache_dir: Path, parameters: ParamsType) -> dict:
     cached_output = {}
     if parameters["temperature"] < 0.000001:  # if temperature == 0
-        cached_output = _read_cached_output(cache_path)
+        # prompt is included in the parameters in openai
+        cached_output = read_cached_output(parameters=dict(parameters), prompt="", cache_dir=cache_dir)
     
     return cached_output
 
 
-def dump_cached_output(output_dict: dict, cache_dir: Path, parameters: dict):
-    cache_dir.mkdir(exist_ok=True, parents=True)
-    cache_path = get_cache_path(cache_dir, parameters)
+def dump_cache_openai(output_dict: dict, cache_dir: Path, parameters: ParamsType):
     if parameters["temperature"] < 0.00001:  # == 0
-        with open(cache_path, "w") as f:
-            json.dump(output_dict, f, indent=4)
+        # prompt is included in the parameters in openai
+        dump_output_to_cache(output_dict=output_dict, parameters=dict(parameters), prompt="", cache_dir=cache_dir)
 
 
 def get_chat_parameters(prompt: str, parameters: ParamsType) -> ParamsType:
-    return dict(messages=[{"role": "user", "content": prompt}], **parameters)
+    parameters["messages"] = [{"role": "user", "content": prompt}]
+    return parameters
 
 
 def get_edit_parameters(input_sentence: str, instruction: str, parameters: ParamsType):
@@ -62,12 +42,12 @@ def openai_text_api(mode: Literal["complete", "chat", "edit"], parameters: Param
                     openai_api_key_path: Optional[Path]=Path("../openai_api_key.txt"),
                     sleep_time: int=1,
                     cache_dir: Optional[Path]=Path("./openai_cache"), overwrite_cache: bool=False,
-                    organization: str = None):
+                    organization: Optional[str] = None):
     """OpenAI API wrapper for text completion, chat, and edit."""
 
     # load cache
     if not overwrite_cache and cache_dir is not None:
-        cached_output = load_cache(cache_dir, parameters)
+        cached_output = read_cache_openai(cache_dir, parameters)
         if len(cached_output) > 0:
             return cached_output
     
@@ -90,6 +70,7 @@ def openai_text_api(mode: Literal["complete", "chat", "edit"], parameters: Param
         raise NotImplementedError()
     
     # openai api
+    response = None
     for try_count in range(10):
         try:
             if mode == "chat":
@@ -116,7 +97,7 @@ def openai_text_api(mode: Literal["complete", "chat", "edit"], parameters: Param
             
             continue
         break
-        
+    
     # output dict
     output_dict = {
         "prompt": prompt, "response": response,
@@ -124,8 +105,8 @@ def openai_text_api(mode: Literal["complete", "chat", "edit"], parameters: Param
     
     # dump cache
     if cache_dir is not None:
-        dump_cached_output(output_dict, cache_dir, parameters)
+        dump_cache_openai(output_dict, cache_dir, parameters)
     
     # avoid too many access
-    time.sleep(sleep_time)    
+    time.sleep(sleep_time)
     return output_dict

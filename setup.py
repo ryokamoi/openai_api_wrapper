@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="openai_api_wrapper",
-    version="0.2.0",
+    version="0.3.0",
     description="This project includes an unofficial OpenAI API wrapper.",
     author="Ryo Kamoi",
     author_email="ryokamoi.jp@gmail.com",
