@@ -16,17 +16,17 @@ class ParamsType(TypedDict):
 
 def read_cache_openai(cache_dir: Path, parameters: ParamsType) -> dict:
     cached_output = {}
-    if parameters["temperature"] < 0.000001:  # if temperature == 0
-        # prompt is included in the parameters in openai
-        cached_output = read_cached_output(parameters=dict(parameters), prompt="", cache_dir=cache_dir)
+    # if parameters["temperature"] < 0.000001:  # if temperature == 0
+    # prompt is included in the parameters in openai
+    cached_output = read_cached_output(parameters=dict(parameters), prompt="", cache_dir=cache_dir)
     
     return cached_output
 
 
 def dump_cache_openai(output_dict: dict, cache_dir: Path, parameters: ParamsType):
-    if parameters["temperature"] < 0.00001:  # == 0
-        # prompt is included in the parameters in openai
-        dump_output_to_cache(output_dict=output_dict, parameters=dict(parameters), prompt="", cache_dir=cache_dir)
+    # if parameters["temperature"] < 0.00001:  # == 0
+    # prompt is included in the parameters in openai
+    dump_output_to_cache(output_dict=output_dict, parameters=dict(parameters), prompt="", cache_dir=cache_dir)
 
 
 def get_chat_parameters(prompt: str, parameters: ParamsType) -> ParamsType:
