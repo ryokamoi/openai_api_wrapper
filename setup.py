@@ -9,5 +9,5 @@ setup(
     url="https://github.com/ryokamoi/openai_api_wrapper",
     license="MIT",
     python_requires=">=3.9",
-    install_requires=["openai", "easy_io @ git+ssh://git@github.com/ryokamoi/easy_io"]
+    install_requires=["openai", "easy_io @ git+ssh://git@github.com/ryokamoi/easy_io@0.1.1"]
 )
